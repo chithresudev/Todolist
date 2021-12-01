@@ -17,7 +17,7 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
             $schedule->call(function () {
-               Task::whereNotNull('deleted_at')->delete();
+               Task::onlyTrashed()->forceDelete();
            })->monthly();
     }
 
