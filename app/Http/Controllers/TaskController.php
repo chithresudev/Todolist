@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Task;
 use App\Models\SubTask;
 use Carbon\Carbon;
+use App\Http\Requests\TaskRequest;
 use Illuminate\Http\Request;
 
 class TaskController extends Controller
@@ -19,7 +20,7 @@ class TaskController extends Controller
     public function index(Request $request)
     {
 
-      $task = Task::with('subtasks')->whereIn('states', ['pending'])->orderBy('due_date', 'asc');
+      $task = Task::pending();
 
       // Search task based on title
       if ($request->search && $request->value) {
@@ -48,12 +49,19 @@ class TaskController extends Controller
             $task = $task->whereBetween('due_date', [$from, $end]);
       }
 
-        $task = $task->get();
-        if (count($task)) {
-          return response()->json($task);
+        $tasks = $task->get();
+        if (count($tasks)) {
+
+            $response = [
+              'success' => true,
+              'data' => $tasks,
+              'message' => 'Task Data Retrived Successfully',
+          ];
+
+          return response()->json($response, 200);
         }
 
-        return response()->json('No Task Available');
+        return response()->json(['message' => 'No Task Available'], 200);
     }
 
     /**
@@ -62,15 +70,21 @@ class TaskController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function createTask(Request $request)
+    public function createTask(TaskRequest $request)
     {
-      $task = new Task();
-      $task->title = $request->title;
-      $task->description = $request->description;
-      $task->due_date = $request->due_date;
-      $task->save();
+        $task = new Task();
+        $task->title = $request->title;
+        $task->description = $request->description;
+        $task->due_date = $request->due_date;
+        $task->save();
 
-      return response()->json($task);
+          $response = [
+            'success' => true,
+            'data' => $task,
+            'message' => 'Task Created Successfully',
+        ];
+
+        return response()->json($response, 201);
     }
 
     /**
@@ -79,17 +93,23 @@ class TaskController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function createSubTask(Task $task, Request $request)
+    public function createSubTask(Task $task, TaskRequest $request)
     {
 
-      $sub_task = new SubTask();
-      $sub_task->task_id = $task->id;
-      $sub_task->title = $request->title;
-      $sub_task->description = $request->description;
-      $sub_task->due_date = $request->due_date;
-      $sub_task->save();
+        $sub_task = new SubTask();
+        $sub_task->task_id = $task->id;
+        $sub_task->title = $request->title;
+        $sub_task->description = $request->description;
+        $sub_task->due_date = $request->due_date;
+        $sub_task->save();
 
-      return response()->json($sub_task);
+        $response = [
+          'success' => true,
+          'data' => $sub_task,
+          'message' => 'Sub Task Created Successfully',
+      ];
+
+    return response()->json($response, 201);
     }
 
     /**
@@ -107,18 +127,28 @@ class TaskController extends Controller
         $sub_task->save();
       }
 
-      return response()->json($task);
+        $response = [
+          'success' => true,
+          'data' => $task,
+          'message' => 'Task States Updated',
+      ];
+
+      return response()->json($response, 201);
     }
 
     /**
-     * Task states updates also sub task states is changed.
+     * Remove the task softDeletes.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
     public function taskRemove(Task $task)
     {
-      $task->delete();
-      return response()->json('Removed the Task');
+        $task->delete();
+        $response = [
+          'success' => true,
+          'message' => 'Removed the Task',
+      ];
+      return response()->json($response, 201);
     }
 }
