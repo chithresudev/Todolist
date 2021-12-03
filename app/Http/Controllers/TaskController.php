@@ -78,7 +78,7 @@ class TaskController extends Controller
         $task->due_date = $request->due_date;
         $task->save();
 
-          $response = [
+        $response = [
             'success' => true,
             'data' => $task,
             'message' => 'Task Created Successfully',
